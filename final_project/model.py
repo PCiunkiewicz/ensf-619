@@ -10,6 +10,7 @@ import pytorch_lightning as pl
 from torch import optim
 from torch.utils.data import DataLoader
 from pytorch_lightning.callbacks import LearningRateMonitor, ModelCheckpoint
+from torchmetrics import StructuralSimilarityIndexMeasure as SSIM, PeakSignalNoiseRatio as PSNR
 
 from paths import MODEL_PATH, PRETRAINED_PATH
 
@@ -88,6 +89,10 @@ class DCBlock(nn.Module):
         return torch.add(x, inputs)
 
 
+def nrmse(preds, target):
+    return torch.sqrt(torch.mean((preds - target)**2)) / torch.sqrt(torch.mean(target**2))
+
+
 class DeepCascade(pl.LightningModule):
     def __init__(
         self,
@@ -120,6 +125,9 @@ class DeepCascade(pl.LightningModule):
         y_hat = self.forward(x)
         loss = F.mse_loss(y_hat, y)
         self.log('train_loss', loss)
+        self.log('train_nrmse', nrmse(y_hat, y))
+        self.log('train_ssim', SSIM()(y_hat.unsqueeze(1), y.unsqueeze(1)))
+        self.log('train_psnr', PSNR()(y_hat, y))
         return loss
 
     def validation_step(self, batch, batch_idx):
@@ -127,6 +135,9 @@ class DeepCascade(pl.LightningModule):
         y_hat = self.forward(x)
         loss = F.mse_loss(y_hat, y)
         self.log('val_loss', loss)
+        self.log('val_nrmse', nrmse(y_hat, y))
+        self.log('val_ssim', SSIM()(y_hat.unsqueeze(1), y.unsqueeze(1)))
+        self.log('val_psnr', PSNR()(y_hat, y))
         return loss
 
     def configure_optimizers(self):
