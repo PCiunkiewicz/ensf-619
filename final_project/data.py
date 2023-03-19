@@ -16,6 +16,7 @@ def process_images(size, mode='original'):
     assert mode in {'original', 'negative', 'newborn'}, 'Invalid mode'
     shape = (size, size) # 164 was found to be smallest dim across all images
     mask = gaussian2d(shape, 0.2, radius=18, seed=42)
+    mask = np.fft.fftshift(mask)
     np.save(DATA_PATH / f'sampling/mask_{size}.npy', mask)
 
     data = []
