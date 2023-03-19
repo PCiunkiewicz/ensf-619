@@ -8,9 +8,9 @@ def fft_transform(x, to='kspace'):
     """
     assert to in {'kspace', 'image'}, 'kwarg `to` must be one of "kspace" | "image"'
     if to == 'kspace':
-        return np.fft.fftshift(np.fft.fft2(np.fft.ifftshift(x)))
+        return np.fft.fft2(x)
     elif to == 'image':
-        return np.fft.fftshift(np.fft.ifft2(np.fft.ifftshift(x)))
+        return np.fft.ifft2(x)
 
 
 def minmax(x):
