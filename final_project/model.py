@@ -90,6 +90,11 @@ class DCBlock(nn.Module):
         return torch.add(x, inputs)
 
 
+class AbsBlock(nn.Module):
+    def forward(self, x):
+        return torch.sqrt(x[:,0,:,:]**2 + x[:,1,:,:]**2)
+
+
 def nrmse(preds, target):
     return torch.sqrt(torch.mean((preds - target)**2)) / torch.sqrt(torch.mean(target**2))
 
@@ -111,6 +116,7 @@ class DeepCascade(pl.LightningModule):
     def forward(self, x):
         inputs = x.detach().clone()
         kspace_flag = True
+        x = FFTBlock(mode='fft')(x)
         for i, domain in enumerate(self.hparams.depth_str):
             if domain == 'i':
                 x = FFTBlock(mode='ifft')(x)
@@ -119,7 +125,8 @@ class DeepCascade(pl.LightningModule):
             x = self.cnns[i](x)
             x = DCBlock(self.hparams.mask, kspace_flag)(x, inputs)
             kspace_flag = True
-        return FFTBlock(mode='ifft')(x)[:,0,:,:] # Only return real part
+        x = FFTBlock(mode='ifft')(x)
+        return AbsBlock()(x)
 
     def training_step(self, batch, batch_idx):
         x, y = batch
