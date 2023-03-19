@@ -11,6 +11,7 @@ from torch import optim
 from torch.utils.data import DataLoader
 from pytorch_lightning.callbacks import LearningRateMonitor, ModelCheckpoint
 from torchmetrics import StructuralSimilarityIndexMeasure as SSIM, PeakSignalNoiseRatio as PSNR
+from torchmetrics import StructuralSimilarityIndexMeasure as SSIM, PeakSignalNoiseRatio as PSNR
 
 from paths import MODEL_PATH, PRETRAINED_PATH
 
