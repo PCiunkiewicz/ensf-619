@@ -2,6 +2,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import pytorch_lightning as pl
+import matplotlib.pyplot as plt
 
 
 def conv_block(in_channels, out_channels, n_convs=3, kernel_size=3):
@@ -68,3 +69,14 @@ class Unet(pl.LightningModule):
         y_hat = self.forward(x)
         loss = F.mse_loss(y_hat, y)
         return {'val_loss': loss}
+
+
+def custom_imshow(imgs, titles=None, figsize=(10, 10), cmap='gray', origin='lower'):
+    fig, axes = plt.subplots(1, len(imgs), figsize=figsize)
+    for i, img in enumerate(imgs):
+        axes[i].imshow(img.T, cmap=cmap, origin=origin)
+        if titles is not None:
+            axes[i].set(title=titles[i])
+    plt.show()
+
+# custom_imshow([targets[150], mask, *data[150]], ['Target', 'Mask', 'Subsampled Real', 'Subsampled Imag'])
