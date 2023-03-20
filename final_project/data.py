@@ -27,7 +27,7 @@ class DeepCascadeDataset(TensorDataset):
         kspace = torch.fft.fft2(img) * mask
         kspace = torch.cat([kspace.real, kspace.imag], dim=-3)
 
-        return kspace, mask, img[0]
+        return kspace, ~mask, img[0]
 
 
 def process_images(size, mode='original'):
@@ -62,7 +62,7 @@ def process_images(size, mode='original'):
             masks.append(np.fft.fftshift(mask))
 
     images = np.array(images, dtype=np.float32)
-    masks = np.array(masks, dtype=np.float32)
+    masks = np.array(masks, dtype=bool)
 
     np.save(savedir / f'images_{mode}_{size}.npy', images)
     np.save(savedir / f'masks_{mode}_{size}.npy', masks)
