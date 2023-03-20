@@ -157,11 +157,12 @@ class DeepCascade(pl.LightningModule):
 
 
 class DeepCascadeTrainer(pl.Trainer):
-    def __init__(self, batch_size, max_epochs, download=False, **kwargs):
+    def __init__(self, batch_size, max_epochs, precision='16-mixed', download=False, **kwargs):
         super().__init__(
             default_root_dir=MODEL_PATH / 'DeepCascade',
             accelerator=str(DEVICE) if str(DEVICE) in {'mps', 'cpu'} else 'auto',
             max_epochs=max_epochs,
+            precision=precision,
             callbacks=[
                 ModelCheckpoint(save_weights_only=True, mode='min', monitor='val_loss'),
                 LearningRateMonitor('epoch')
