@@ -151,7 +151,7 @@ class DeepCascade(pl.LightningModule):
         return loss
 
     def configure_optimizers(self):
-        return optim.Adam(self.parameters(), lr=1e-3, weight_decay=1e-4)
+        return optim.AdamW(self.parameters(), lr=1e-3, weight_decay=1e-2)
 
 
 class DeepCascadeTrainer(pl.Trainer):
