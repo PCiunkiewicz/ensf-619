@@ -21,7 +21,7 @@ def nrmse(preds, target):
     return torch.sqrt(torch.mean((preds - target)**2)) / torch.sqrt(torch.mean(target**2))
 
 
-def minmax(x):
+def min_max_norm(x):
     """
     Perform min-max normalization to input data.
     """

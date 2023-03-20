@@ -7,7 +7,7 @@ import nibabel as nib
 from torch.utils.data import TensorDataset
 
 from paths import DATA_PATH, ORIGINALS, NEGATIVES, NEWBORNS
-from utils import remove_blank_slices, center_crop_2d
+from utils import remove_blank_slices, center_crop_2d, min_max_norm
 from sampling import gaussian2d
 
 
@@ -51,6 +51,7 @@ def process_images(size, mode='original'):
     for filename in tqdm.tqdm(os.listdir(path)):
         img = nib.load(path / filename).get_fdata()
         img = remove_blank_slices(img)
+        img = min_max_norm(img)
         for i in range(img.shape[slice_axis]):
             if mode in {'original', 'negative'}:
                 cropped = center_crop_2d(img[:,:,i], shape)
