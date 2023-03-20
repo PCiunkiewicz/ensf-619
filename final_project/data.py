@@ -25,7 +25,7 @@ class DeepCascadeDataset(TensorDataset):
         if self.transform is not None:
             img = self.transform(img)
             kspace = torch.fft.fft2(img) * mask
-            kspace = torch.cat([kspace.real, kspace.imag], dim=0)
+            kspace = torch.cat([kspace.real, kspace.imag], dim=-3)
         return kspace, mask, img[0]
 
 
