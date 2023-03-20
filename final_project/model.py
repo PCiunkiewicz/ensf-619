@@ -14,6 +14,7 @@ from torchmetrics import StructuralSimilarityIndexMeasure as SSIM, PeakSignalNoi
 from torchmetrics import StructuralSimilarityIndexMeasure as SSIM, PeakSignalNoiseRatio as PSNR
 
 from paths import MODEL_PATH, PRETRAINED_PATH
+from utils import nrmse
 
 
 LOG = logging.getLogger('main')
@@ -77,16 +78,15 @@ class FFTBlock(nn.Module):
 
 
 class DCBlock(nn.Module):
-    def __init__(self, mask, kspace=False):
+    def __init__(self, kspace=False):
         super().__init__()
-        self.mask = torch.tensor(mask, device=DEVICE)
         self.kspace = kspace
 
-    def forward(self, x, inputs):
+    def forward(self, x, inputs, mask):
         if not self.kspace:
             x = FFTBlock(mode='fft')(x)
 
-        x = torch.mul(x, self.mask)
+        x = torch.mul(x, mask.unsqueeze(1))
         return torch.add(x, inputs)
 
 
@@ -95,14 +95,9 @@ class AbsBlock(nn.Module):
         return torch.sqrt(x[:,0,:,:]**2 + x[:,1,:,:]**2)
 
 
-def nrmse(preds, target):
-    return torch.sqrt(torch.mean((preds - target)**2)) / torch.sqrt(torch.mean(target**2))
-
-
 class DeepCascade(pl.LightningModule):
     def __init__(
         self,
-        mask,
         n_channels=2,
         depth_str='ikikii',
         depth=5,
@@ -113,24 +108,23 @@ class DeepCascade(pl.LightningModule):
         self.save_hyperparameters()
         self.cnns = nn.ModuleList([CNNBLock(n_channels, nf, depth, kernel_size) for _ in depth_str])
 
-    def forward(self, x):
+    def forward(self, x, mask):
         inputs = x.detach().clone()
         kspace_flag = True
-        x = FFTBlock(mode='fft')(x)
         for i, domain in enumerate(self.hparams.depth_str):
             if domain == 'i':
                 x = FFTBlock(mode='ifft')(x)
                 kspace_flag = False
 
             x = self.cnns[i](x)
-            x = DCBlock(self.hparams.mask, kspace_flag)(x, inputs)
+            x = DCBlock(kspace_flag)(x, inputs, mask)
             kspace_flag = True
         x = FFTBlock(mode='ifft')(x)
         return AbsBlock()(x)
 
     def training_step(self, batch, batch_idx):
-        x, y = batch
-        y_hat = self.forward(x)
+        x, mask, y = batch
+        y_hat = self.forward(x, mask)
         loss = F.mse_loss(y_hat, y)
 
         ssim = SSIM().to(DEVICE)
@@ -143,8 +137,8 @@ class DeepCascade(pl.LightningModule):
         return loss
 
     def validation_step(self, batch, batch_idx):
-        x, y = batch
-        y_hat = self.forward(x)
+        x, mask, y = batch
+        y_hat = self.forward(x, mask)
         loss = F.mse_loss(y_hat, y)
 
         ssim = SSIM().to(DEVICE)

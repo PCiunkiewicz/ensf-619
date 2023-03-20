@@ -1,12 +1,32 @@
 import os
 
 import tqdm
+import torch
 import numpy as np
 import nibabel as nib
+from torch.utils.data import TensorDataset
 
 from paths import DATA_PATH, ORIGINALS, NEGATIVES, NEWBORNS
-from transform import remove_blank_slices, center_crop_2d, fft_transform
+from utils import remove_blank_slices, center_crop_2d
 from sampling import gaussian2d
+
+
+class DeepCascadeDataset(TensorDataset):
+    def __init__(self, images, masks, transform=None):
+        super().__init__(images, masks)
+        assert images.size(0) == masks.size(0), "Size mismatch between tensors"
+        self.images = images
+        self.masks = masks
+        self.transform = transform
+
+    def __getitem__(self, index):
+        img = self.images[index]
+        mask = self.masks[np.random.randint(self.masks.size(0))]
+        if self.transform is not None:
+            img = self.transform(img)
+            kspace = torch.fft.fft2(img) * mask
+            kspace = torch.cat([kspace.real, kspace.imag], dim=0)
+        return kspace, mask, img[0]
 
 
 def process_images(size, mode='original'):
@@ -15,12 +35,6 @@ def process_images(size, mode='original'):
     """
     assert mode in {'original', 'negative', 'newborn'}, 'Invalid mode'
     shape = (size, size) # 164 was found to be smallest dim across all images
-    mask = gaussian2d(shape, 0.2, radius=18, seed=42)
-    mask = np.fft.fftshift(mask)
-    np.save(DATA_PATH / f'sampling/mask_{size}.npy', mask)
-
-    data = []
-    targets = []
 
     if mode in {'original', 'negative'}:
         path = ORIGINALS if mode == 'original' else NEGATIVES
@@ -31,6 +45,8 @@ def process_images(size, mode='original'):
         savedir = DATA_PATH / 'newborn'
         slice_axis = 1
 
+    images = []
+    masks = []
     for filename in tqdm.tqdm(os.listdir(path)):
         img = nib.load(path / filename).get_fdata()
         img = remove_blank_slices(img)
@@ -39,18 +55,16 @@ def process_images(size, mode='original'):
                 cropped = center_crop_2d(img[:,:,i], shape)
             elif mode == 'newborn':
                 cropped = center_crop_2d(img[:,i,:], shape)
-            kspace = fft_transform(cropped, to='kspace')
-            kspace = kspace * mask
-            subsampled = fft_transform(kspace, to='image')
+            images.append(cropped)
 
-            data.append(np.array((subsampled.real, subsampled.imag)))
-            targets.append(cropped)
+            mask = gaussian2d(shape, 0.2, radius=18)
+            masks.append(np.fft.fftshift(mask))
 
-    data = np.array(data, dtype=np.float32)
-    targets = np.array(targets, dtype=np.float32)
+    images = np.array(images, dtype=np.float32)
+    masks = np.array(masks, dtype=np.float32)
 
-    np.save(savedir / f'data_{mode}_{size}.npy', data)
-    np.save(savedir / f'targets_{mode}_{size}.npy', targets)
+    np.save(savedir / f'images_{mode}_{size}.npy', images)
+    np.save(savedir / f'masks_{mode}_{size}.npy', masks)
 
 
 def load_data(size, mode='original'):
@@ -63,11 +77,10 @@ def load_data(size, mode='original'):
     elif mode == 'newborn':
         savedir = DATA_PATH / 'newborn'
 
-    data = np.load(savedir / f'data_{mode}_{size}.npy')
-    targets = np.load(savedir / f'targets_{mode}_{size}.npy')
-    mask = np.load(DATA_PATH / f'sampling/mask_{size}.npy')
+    images = np.load(savedir / f'images_{mode}_{size}.npy')
+    masks = np.load(savedir / f'masks_{mode}_{size}.npy')
 
-    return data, targets, mask
+    return images, masks
 
 
 if __name__ == '__main__':
