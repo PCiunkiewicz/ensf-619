@@ -14,7 +14,7 @@ from sampling import gaussian2d
 class DeepCascadeDataset(TensorDataset):
     def __init__(self, images, masks, transform=None):
         super().__init__(images, masks)
-        assert images.size(0) == masks.size(0), "Size mismatch between tensors"
+        assert images.size(0) == masks.size(0), 'Size mismatch between tensors'
         self.images = images
         self.masks = masks
         self.transform = transform
@@ -23,9 +23,10 @@ class DeepCascadeDataset(TensorDataset):
         img = self.images[index]
         mask = self.masks[np.random.randint(self.masks.size(0))]
         if self.transform is not None:
-            # img = self.transform(img)
-            kspace = torch.fft.fft2(img) * mask
-            kspace = torch.cat([kspace.real, kspace.imag], dim=-3)
+            img = self.transform(img)
+        kspace = torch.fft.fft2(img) * mask
+        kspace = torch.cat([kspace.real, kspace.imag], dim=-3)
+
         return kspace, mask, img[0]
 
 

@@ -102,7 +102,9 @@ class DeepCascade(pl.LightningModule):
         depth_str='ikikii',
         depth=5,
         kernel_size=3,
-        nf=48
+        nf=48,
+        lr=1e-3,
+        weight_decay=1e-5,
     ):
         super().__init__()
         self.save_hyperparameters()
@@ -151,7 +153,7 @@ class DeepCascade(pl.LightningModule):
         return loss
 
     def configure_optimizers(self):
-        return optim.AdamW(self.parameters(), lr=1e-3, weight_decay=1e-2)
+        return optim.AdamW(self.parameters(), lr=self.hparams.lr, weight_decay=self.hparams.weight_decay)
 
 
 class DeepCascadeTrainer(pl.Trainer):
@@ -207,6 +209,7 @@ class DeepCascadeTrainer(pl.Trainer):
                 train,
                 batch_size=self.batch_size,
                 shuffle=True,
+                drop_last=True,
                 pin_memory=True,
                 num_workers=NUM_WORKERS,
             )
@@ -214,6 +217,7 @@ class DeepCascadeTrainer(pl.Trainer):
                 val,
                 batch_size=self.batch_size,
                 shuffle=False,
+                drop_last=True,
                 pin_memory=True,
                 num_workers=NUM_WORKERS,
             )
