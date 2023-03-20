@@ -21,7 +21,8 @@ class DeepCascadeDataset(TensorDataset):
 
     def __getitem__(self, index):
         img = self.images[index]
-        mask = self.masks[np.random.randint(self.masks.size(0))]
+        # mask = self.masks[np.random.randint(self.masks.size(0))]
+        mask = self.masks[0]
         if self.transform is not None:
             img = self.transform(img)
             kspace = torch.fft.fft2(img) * mask
