@@ -75,8 +75,83 @@ def custom_imshow(imgs, titles=None, figsize=(10, 10), cmap='gray', origin='lowe
     fig, axes = plt.subplots(1, len(imgs), figsize=figsize)
     for i, img in enumerate(imgs):
         axes[i].imshow(img.T, cmap=cmap, origin=origin)
+        axes[i].set_axis_off()
         if titles is not None:
             axes[i].set(title=titles[i])
     plt.show()
 
 # custom_imshow([targets[150], mask, *data[150]], ['Target', 'Mask', 'Subsampled Real', 'Subsampled Imag'])
+
+
+# class DeepCascadeTrainer(pl.Trainer):
+#     def __init__(self, batch_size, max_epochs, precision='16-mixed', download=False, **kwargs):
+#         super().__init__(
+#             default_root_dir=MODEL_PATH / 'DeepCascade',
+#             accelerator=str(DEVICE) if str(DEVICE) in {'mps', 'cpu'} else 'auto',
+#             max_epochs=max_epochs,
+#             precision=precision,
+#             callbacks=[
+#                 ModelCheckpoint(save_weights_only=True, mode='min', monitor='val_loss'),
+#                 LearningRateMonitor('epoch')
+#             ]
+#         )
+
+#         self.batch_size = batch_size
+#         self.is_trained = False
+#         # Attempt to load pre-trained model
+#         self.model = self.load_pretrained(download)
+#         # Fall back to new DeepCascade instance if self.model is None
+#         if not self.model:
+#             self.model = DeepCascade(**kwargs)
+
+#     def load_pretrained(self, download=False):
+#         ckpt_path = PRETRAINED_PATH / 'DeepCascade.ckpt'
+#         # Download pre-trained model from Github
+#         if download:
+#             self.download_pretrained(ckpt_path)
+
+#         # Load pre-trained model from disk if file exists
+#         if os.path.isfile(ckpt_path):
+#             self.is_trained = True
+#             LOG.info(f'Loading pre-trained model from path: {ckpt_path}')
+#             return DeepCascade.load_from_checkpoint(ckpt_path)
+
+#     def download_pretrained(self, ckpt_path):
+#         # Pre-trained model checkpoint from my Github repo
+#         pretrained_url = 'https://raw.githubusercontent.com/pciunkiewicz/ensf-619/master/final_project/models/pretrained/DeepCascade.ckpt'
+#         os.makedirs('models', exist_ok=True)
+
+#         # Only download the file if not found on disk; no overwrite
+#         if not os.path.isfile(ckpt_path):
+#             try:
+#                 LOG.info(f'Downloading pre-trained model from {pretrained_url}')
+#                 urllib.request.urlretrieve(pretrained_url, ckpt_path)
+#             except HTTPError as exception:
+#                 LOG.error(exception)
+
+#     def fit(self, train, val):
+#         # Check if pre-trained model has been loaded
+#         if not self.is_trained:
+#             # Create PyTorch DataLoaders for training and validation sets
+#             train_loader = DataLoader(
+#                 train,
+#                 batch_size=self.batch_size,
+#                 shuffle=True,
+#                 drop_last=True,
+#                 pin_memory=True,
+#                 num_workers=NUM_WORKERS,
+#             )
+#             val_loader = DataLoader(
+#                 val,
+#                 batch_size=self.batch_size,
+#                 shuffle=False,
+#                 drop_last=True,
+#                 pin_memory=True,
+#                 num_workers=NUM_WORKERS,
+#             )
+
+#             super().fit(self.model, train_loader, val_loader)
+#             self.model = DeepCascade.load_from_checkpoint(self.checkpoint_callback.best_model_path)
+#         else:
+#             LOG.info('Model is already trained; returning pre-trained model.')
+#         return self.model
