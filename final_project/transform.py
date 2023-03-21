@@ -10,7 +10,7 @@ class DeepCascadeTransform:
             transforms.RandomRotation(degrees=20),
             transforms.RandomHorizontalFlip(),
             transforms.RandomVerticalFlip(),
-            transforms.RandomResizedCrop(size=(size, size), scale=(0.95, 1), antialias=True)
+            transforms.RandomResizedCrop(size=(size, size), scale=(0.95, 1), antialias=False)
         ])
 
     def __call__(self, img):
