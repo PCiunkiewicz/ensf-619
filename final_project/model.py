@@ -1,6 +1,3 @@
-import os
-import logging
-
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -9,13 +6,6 @@ from torch import optim
 from torchmetrics.functional import structural_similarity_index_measure as ssim, peak_signal_noise_ratio as psnr
 
 from utils import nrmse
-
-
-LOG = logging.getLogger('main')
-LOG.setLevel(logging.INFO)
-
-NUM_WORKERS = os.cpu_count()
-LOG.info(f'Number of cpu cores: {NUM_WORKERS}')
 
 
 class CNNBLock(nn.Module):
