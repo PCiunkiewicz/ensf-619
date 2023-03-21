@@ -18,11 +18,12 @@ class DeepCascadeDataset(TensorDataset):
         self.images = images
         self.masks = masks
         self.transform = transform
+        self.val = False
 
     def __getitem__(self, index):
         img = self.images[index]
         mask = self.masks[np.random.randint(self.masks.size(0))]
-        if self.transform is not None:
+        if self.transform and not self.val:
             img = self.transform(img)
         kspace = torch.fft.fft2(img) * mask
         kspace = torch.cat([kspace.real, kspace.imag], dim=-3)
