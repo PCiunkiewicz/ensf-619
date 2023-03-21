@@ -5,7 +5,7 @@ import lightning.pytorch as pl
 from torch import optim
 from torchmetrics.functional import structural_similarity_index_measure as ssim, peak_signal_noise_ratio as psnr
 
-from utils import nrmse
+from utils import nrmse2
 
 
 class CNNBLock(nn.Module):
@@ -100,9 +100,9 @@ class DeepCascade(pl.LightningModule):
         loss = F.mse_loss(y_hat, y)
 
         self.log('train_loss', loss)
-        self.log('train_nrmse', nrmse(y_hat, y))
-        self.log('train_ssim', ssim(y_hat.unsqueeze(1), y.unsqueeze(1)))
-        self.log('train_psnr', psnr(y_hat, y))
+        self.log('train_nrmse', nrmse2(y_hat, y))
+        self.log('train_ssim', ssim(y_hat.unsqueeze(1), y.unsqueeze(1), data_range=1))
+        self.log('train_psnr', psnr(y_hat, y, data_range=1))
         return loss
 
     def validation_step(self, batch, batch_idx):
@@ -111,9 +111,9 @@ class DeepCascade(pl.LightningModule):
         loss = F.mse_loss(y_hat, y)
 
         self.log('val_loss', loss)
-        self.log('val_nrmse', nrmse(y_hat, y))
-        self.log('val_ssim', ssim(y_hat.unsqueeze(1), y.unsqueeze(1)))
-        self.log('val_psnr', psnr(y_hat, y))
+        self.log('val_nrmse', nrmse2(y_hat, y))
+        self.log('val_ssim', ssim(y_hat.unsqueeze(1), y.unsqueeze(1), data_range=1))
+        self.log('val_psnr', psnr(y_hat, y, data_range=1))
         return loss
 
     def configure_optimizers(self):
