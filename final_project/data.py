@@ -41,23 +41,20 @@ def process_images(size, mode='original'):
     if mode in {'original', 'negative'}:
         path = ORIGINALS if mode == 'original' else NEGATIVES
         savedir = DATA_PATH / 'adult'
-        slice_axis = 2
     elif mode == 'newborn':
         path = NEWBORNS
         savedir = DATA_PATH / 'newborn'
-        slice_axis = 1
 
     images = []
     masks = []
     for filename in tqdm.tqdm(os.listdir(path)):
         img = nib.load(path / filename).get_fdata()
+        if mode == 'newborn':
+            img = np.swapaxes(img, 2, 1)
         img = remove_blank_slices(img)
         img = min_max_norm(img)
-        for i in range(img.shape[slice_axis]):
-            if mode in {'original', 'negative'}:
-                cropped = center_crop_2d(img[:,:,i], shape)
-            elif mode == 'newborn':
-                cropped = center_crop_2d(img[:,i,:], shape)
+        for i in range(img.shape[2]):
+            cropped = center_crop_2d(img[:,:,i], shape)
             images.append(cropped)
 
             mask = gaussian2d(shape, 0.2, radius=18)
