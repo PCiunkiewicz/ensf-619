@@ -1,0 +1,7 @@
+depth: 5
+depth_str: ikikii
+kernel_size: 3
+lr: 0.001
+n_channels: 2
+nf: 48
+weight_decay: 0.0001
