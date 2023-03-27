@@ -1,10 +1,13 @@
+"""
+Exploration of the data and the model using IPython.
+"""
 # %%
 import os
 
-import numpy as np
 import matplotlib.pyplot as plt
 import torch
 import numpy as np
+from tqdm import tqdm
 
 import torch
 from torch.utils.data import random_split, DataLoader
@@ -13,9 +16,8 @@ from lightning.pytorch.utilities.model_summary import ModelSummary
 
 from data import load_data, DeepCascadeDataset
 from model import DeepCascade
-from utils import nrmse, nrmse2
+from utils import nrmse, nrmse2, custom_imshow
 from transform import DeepCascadeTransform
-from graveyard import custom_imshow
 from paths import MODEL_PATH
 
 
@@ -29,23 +31,32 @@ masks = torch.tensor(masks, dtype=torch.float32)
 
 transform = DeepCascadeTransform(size=SIZE)
 dataset = DeepCascadeDataset(images, masks, transform=transform)
-train_ds, val_ds = random_split(dataset, [0.8, 0.2])
-val_ds.dataset.val = True
+dataset.val = True
+# train_ds, val_ds = random_split(dataset, [0.8, 0.2])
 
-checkpoint_path = MODEL_PATH / 'version_2.ckpt'
-model = DeepCascade.load_from_checkpoint(checkpoint_path)
 
 # %%
-# slice_idx = 0
-# kspace, mask, img = val_ds[slice_idx:slice_idx+1]
+model = {}
+for version in (2, 7, 8, 9, 10):
+    checkpoint_path = MODEL_PATH / f'version_{version}.ckpt'
+    model[version] = DeepCascade.load_from_checkpoint(checkpoint_path).eval()
 
-batch_size = 8
-kspace, mask, img = next(iter(DataLoader(val_ds, batch_size=batch_size)))
 
-rec = torch.abs(torch.fft.ifft2(kspace[:,0] + 1j * kspace[:,1]))
-pred = model(kspace, mask).detach()
+# %%
+rec = []
+imgs = []
+pred = []
+for kspace, mask, img in tqdm(DataLoader(dataset, batch_size=8)):
+    rec.append(torch.abs(torch.fft.ifft2(kspace[:,0] + 1j * kspace[:,1])))
+    imgs.append(img)
+    pred.append(model[10](kspace, mask).detach())
 
-custom_imshow([rec[0], pred[0], img[0]], ['Undersampled', 'Prediction', 'Original'])
+rec = torch.cat(rec)
+img = torch.cat(imgs)
+pred = torch.cat(pred)
+
+
+# %%
 print('rec ssim:', ssim(rec.unsqueeze(1), img.unsqueeze(1), data_range=1))
 print('rec psnr:', psnr(rec, img, data_range=1))
 print('rec nrmse:', nrmse(rec, img))
@@ -57,4 +68,22 @@ print('pred nrmse2:', nrmse2(pred, img))
 
 
 # %%
+show_slice = 1150
+custom_imshow([rec[show_slice], pred[show_slice], img[show_slice]], ['Undersampled', 'Prediction', 'Original'])
+
+
+# %%
 ModelSummary(model, max_depth=-1)
+
+
+# %%
+fig, ax = plt.subplots(figsize=(12, 12))
+
+for mode in ('original', 'negative', 'newborn'):
+    images, masks = load_data(size=SIZE, mode=mode)
+    images = torch.tensor(images, dtype=torch.float32)
+    images = torch.flatten(torch.mean(images, dim=0))
+    _ = ax.hist(images, bins=100, alpha=0.5, label=mode, density=True)
+
+ax.legend()
+# %%
