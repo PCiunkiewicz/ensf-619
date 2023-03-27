@@ -1,3 +1,6 @@
+"""
+Contrast inversion on gray and white matter in the brain images.
+"""
 import os
 
 import tqdm

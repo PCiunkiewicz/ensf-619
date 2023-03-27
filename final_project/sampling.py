@@ -1,3 +1,6 @@
+"""
+Functions for generating sampling patterns from gaussian distributions.
+"""
 import numpy as np
 
 

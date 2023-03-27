@@ -1,3 +1,6 @@
+"""
+Data loading and processing module.
+"""
 import os
 
 import tqdm
@@ -12,6 +15,9 @@ from sampling import gaussian2d
 
 
 class DeepCascadeDataset(TensorDataset):
+    """
+    Dataset for DeepCascade.
+    """
     def __init__(self, images, masks, transform=None):
         super().__init__(images, masks)
         assert images.size(0) == masks.size(0), 'Size mismatch between tensors'

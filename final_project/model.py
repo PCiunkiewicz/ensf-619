@@ -1,3 +1,6 @@
+"""
+Model definition and NN block module.
+"""
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -9,6 +12,9 @@ from utils import nrmse2
 
 
 class CNNBLock(nn.Module):
+    """
+    Convolutional Neural Network Block for Deep Cascade model.
+    """
     def __init__(self, in_channels, nf, depth=3, kernel_size=3):
         super().__init__()
         self.conv = nn.Sequential(
@@ -29,6 +35,9 @@ class CNNBLock(nn.Module):
 
 
 class FFTBlock(nn.Module):
+    """
+    Fast Fourier Transform Block for Deep Cascade model.
+    """
     def __init__(self, mode='fft'):
         super().__init__()
         self.mode = mode
@@ -48,6 +57,9 @@ class FFTBlock(nn.Module):
 
 
 class DCBlock(nn.Module):
+    """
+    Data Consistency Block for Deep Cascade model.
+    """
     def __init__(self, kspace=False):
         super().__init__()
         self.kspace = kspace
@@ -61,11 +73,17 @@ class DCBlock(nn.Module):
 
 
 class AbsBlock(nn.Module):
+    """
+    Absolute magnitude Block for Deep Cascade model.
+    """
     def forward(self, x):
         return torch.sqrt(x[:,0,:,:]**2 + x[:,1,:,:]**2)
 
 
 class DeepCascade(pl.LightningModule):
+    """
+    Deep Cascade model for Compressed Sensing MRI Reconstruction.
+    """
     def __init__(
         self,
         n_channels=2,

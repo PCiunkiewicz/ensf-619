@@ -1,3 +1,6 @@
+"""
+Dataset transformation utility class
+"""
 from torchvision import transforms
 
 
