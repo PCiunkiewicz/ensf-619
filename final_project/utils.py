@@ -77,7 +77,7 @@ def custom_imshow(imgs, titles=None, figsize=(10, 10), cmap='gray', origin='lowe
     """
     Custom imshow function for displaying multiple images.
     """
-    fig, axes = plt.subplots(1, len(imgs), figsize=figsize)
+    _, axes = plt.subplots(1, len(imgs), figsize=figsize)
     for i, img in enumerate(imgs):
         axes[i].imshow(img.T, cmap=cmap, origin=origin)
         axes[i].set_axis_off()
