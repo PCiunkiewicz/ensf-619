@@ -140,7 +140,8 @@ class DeepCascade(pl.LightningModule):
     def configure_optimizers(self):
         return optim.AdamW(self.parameters(), lr=self.hparams.lr, weight_decay=self.hparams.weight_decay)
 
-    def load_model(self, name, model_dir='DeepCascade'):
+    @classmethod
+    def load_model(cls, name, model_dir='DeepCascade'):
         lightning_logs = MODEL_PATH / model_dir / 'lightning_logs'
         assert os.path.isdir(lightning_logs), f'Lightning logs not found for model {model_dir}'
 
@@ -148,4 +149,4 @@ class DeepCascade(pl.LightningModule):
         assert os.path.isdir(checkpoints), f'Checkpoints not found for {model_dir} {name}'
 
         latest = sorted(os.listdir(checkpoints))[-1]
-        return self.load_from_checkpoint(checkpoints / latest)
+        return cls.load_from_checkpoint(checkpoints / latest)
