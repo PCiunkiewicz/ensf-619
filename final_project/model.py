@@ -1,6 +1,8 @@
 """
 Model definition and NN block module.
 """
+import os
+
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -8,6 +10,7 @@ import lightning.pytorch as pl
 from torch import optim
 from torchmetrics.functional import structural_similarity_index_measure as ssim, peak_signal_noise_ratio as psnr
 
+from paths import MODEL_PATH
 from utils import nrmse2
 
 
@@ -136,3 +139,13 @@ class DeepCascade(pl.LightningModule):
 
     def configure_optimizers(self):
         return optim.AdamW(self.parameters(), lr=self.hparams.lr, weight_decay=self.hparams.weight_decay)
+
+    def load_model(self, name, model_dir='DeepCascade'):
+        lightning_logs = MODEL_PATH / model_dir / 'lightning_logs'
+        assert os.path.isdir(lightning_logs), f'Lightning logs not found for model {model_dir}'
+
+        checkpoints = lightning_logs / name / 'checkpoints'
+        assert os.path.isdir(checkpoints), f'Checkpoints not found for {model_dir} {name}'
+
+        latest = sorted(os.listdir(checkpoints))[-1]
+        return self.load_from_checkpoint(checkpoints / latest)
