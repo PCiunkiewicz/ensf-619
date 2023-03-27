@@ -1,5 +1,9 @@
+"""
+Utility functions for the final project.
+"""
 import torch
 import numpy as np
+import matplotlib.pyplot as plt
 
 
 def fft_transform(x, to='kspace'):
@@ -67,3 +71,16 @@ def zero_pad_2d(x, size):
     h1 = (ch - h) // 2
     w1 = (cw - w) // 2
     return np.pad(x, ((h1, ch-h-h1), (w1, cw-w-w1)), 'constant')
+
+
+def custom_imshow(imgs, titles=None, figsize=(10, 10), cmap='gray', origin='lower'):
+    """
+    Custom imshow function for displaying multiple images.
+    """
+    fig, axes = plt.subplots(1, len(imgs), figsize=figsize)
+    for i, img in enumerate(imgs):
+        axes[i].imshow(img.T, cmap=cmap, origin=origin)
+        axes[i].set_axis_off()
+        if titles is not None:
+            axes[i].set(title=titles[i])
+    plt.show()
