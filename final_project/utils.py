@@ -73,7 +73,7 @@ def zero_pad_2d(x, size):
     return np.pad(x, ((h1, ch-h-h1), (w1, cw-w-w1)), 'constant')
 
 
-def custom_imshow(imgs, titles=None, figsize=(10, 10), cmap='gray', origin='lower'):
+def custom_imshow(imgs, titles=None, figsize=(10, 10), cmap='gray', origin='lower', filename=None):
     """
     Custom imshow function for displaying multiple images.
     """
@@ -83,4 +83,7 @@ def custom_imshow(imgs, titles=None, figsize=(10, 10), cmap='gray', origin='lowe
         axes[i].set_axis_off()
         if titles is not None:
             axes[i].set(title=titles[i])
+
+    if filename is not None:
+        plt.savefig(filename, bbox_inches='tight', pad_inches=0, dpi=300)
     plt.show()
