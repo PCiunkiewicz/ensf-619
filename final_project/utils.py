@@ -27,7 +27,7 @@ def nrmse(preds, target):
 
 def nrmse2(preds, target):
     """
-    Calculate normalized root mean squared error in PyTorch.
+    Calculate min-max normalized root mean squared error in PyTorch.
     """
     return torch.sqrt(torch.mean((preds - target)**2)) / (target.max() - target.min())
 
