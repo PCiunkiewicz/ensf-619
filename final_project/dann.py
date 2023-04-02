@@ -35,9 +35,9 @@ class CNNBLock(nn.Module):
         self.conv2 = nn.Conv2d(nf, in_channels, 1)
 
     def forward(self, x):
-        features = self.conv(x).detach().clone()
+        features = self.conv(x)
         conv = self.conv2(features)
-        return torch.add(x, conv), features
+        return torch.add(x, conv), features.detach().clone()
 
 
 class ReconstructionBlock(nn.Module):
@@ -57,7 +57,7 @@ class DomainClassifierBlock(nn.Module):
         super().__init__()
         self.flat_shape = nf * size * size // pool // pool
         self.pool = pool
-        self.conv = nn.Sequential(
+        self.nn = nn.Sequential(
             nn.Linear(self.flat_shape, 32),
             nn.BatchNorm1d(32),
             nn.ReLU(inplace=True),
@@ -68,7 +68,7 @@ class DomainClassifierBlock(nn.Module):
     def forward(self, x):
         x = nn.MaxPool2d(self.pool)(x)
         x = x.view(-1, self.flat_shape)
-        return self.conv(x)
+        return self.nn(x)
 
 
 class FFTBlock(nn.Module):
