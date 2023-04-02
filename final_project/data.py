@@ -37,6 +37,38 @@ class DeepCascadeDataset(TensorDataset):
         return kspace, 1 - mask, img[0]
 
 
+class DANNDataset(TensorDataset):
+    """
+    Dataset for DeepCascade domain adaptation.
+    """
+    def __init__(self, src_images, masks, target_images, transform=None):
+        super().__init__(src_images, masks)
+        assert src_images.size(0) == masks.size(0), 'Size mismatch between tensors'
+        self.src_images = src_images
+        if target_images.size(0) != src_images.size(0):
+            target_images = target_images[torch.randint(target_images.size(0), (src_images.size(0),))]
+        self.target_images = target_images
+        self.masks = masks
+        self.transform = transform
+        self.val = False
+
+    def __getitem__(self, index):
+        src_img = self.src_images[index]
+        target_img = self.target_images[index]
+        mask = self.masks[np.random.randint(self.masks.size(0))]
+        if self.transform and not self.val:
+            src_img = self.transform(src_img)
+            target_img = self.transform(target_img)
+
+        src_kspace = torch.fft.fft2(src_img) * mask
+        src_kspace = torch.cat([src_kspace.real, src_kspace.imag], dim=-3)
+
+        target_kspace = torch.fft.fft2(target_img) * mask
+        target_kspace = torch.cat([target_kspace.real, target_kspace.imag], dim=-3)
+
+        return src_kspace, target_kspace, 1 - mask, src_img[0]
+
+
 def process_images(size, mode='original'):
     """
     Process images into subsampled kspace data and targets.
