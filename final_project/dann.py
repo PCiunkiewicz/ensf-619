@@ -44,9 +44,6 @@ class ReconstructionBlock(nn.Module):
     """
     Regressor Block for DANN with partial CNNBlock structure.
     """
-    def __init__(self):
-        super().__init__()
-
     def forward(self, x):
         x = FFTBlock(mode='ifft')(x)
         return AbsBlock()(x)
@@ -180,6 +177,7 @@ class DeepCascadeDANN(pl.LightningModule):
         kernel_size=3,
         nf=48,
         img_size=164,
+        beta=0.001,
         lr=1e-3,
         weight_decay=1e-5,
     ):
@@ -223,7 +221,7 @@ class DeepCascadeDANN(pl.LightningModule):
         self.log('train_nrmse', nrmse2(y_hat, y))
         self.log('train_ssim', ssim(y_hat.unsqueeze(1), y.unsqueeze(1), data_range=1))
         self.log('train_psnr', psnr(y_hat, y, data_range=1))
-        return loss + src_err + target_err
+        return loss + (src_err + target_err) * self.hparams.beta
 
     def validation_step(self, batch, batch_idx):
         src_x, target_x, mask, y = batch
@@ -243,7 +241,7 @@ class DeepCascadeDANN(pl.LightningModule):
         self.log('val_nrmse', nrmse2(y_hat, y))
         self.log('val_ssim', ssim(y_hat.unsqueeze(1), y.unsqueeze(1), data_range=1))
         self.log('val_psnr', psnr(y_hat, y, data_range=1))
-        return loss + src_err + target_err
+        return loss + (src_err + target_err) * self.hparams.beta
 
     def configure_optimizers(self):
         return optim.AdamW(self.parameters(), lr=self.hparams.lr, weight_decay=self.hparams.weight_decay)
