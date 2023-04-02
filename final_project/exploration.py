@@ -144,4 +144,64 @@ def custom_imshow_2(imgs, titles=None, figsize=(10, 10), cmap='gray', origin='lo
 img = torch.Tensor(original[150]).unsqueeze(0)
 custom_imshow_2([img, transform(img), transform(img), transform(img)], ['Original', 'Sample Tranform 1', 'Sample Tranform 2', 'Sample Tranform 3'], filename='transform.png')
 
+
+# %%
+from dann import DeepCascadeDANN
+from data import DANNDataset
+
+SIZE = 164
+
+target_images, _ = load_data(size=SIZE, mode='newborn')
+target_images = torch.tensor(target_images, dtype=torch.float32)
+target_images = target_images.unsqueeze(1)
+
+src_images, masks = load_data(size=SIZE, mode='original')
+src_images = torch.tensor(src_images, dtype=torch.float32)
+src_images = src_images.unsqueeze(1)
+masks = torch.tensor(masks, dtype=torch.float32)
+
+transform = DeepCascadeTransform(size=SIZE)
+dataset = DANNDataset(src_images, masks, target_images, transform=transform)
+train_ds, val_ds = random_split(dataset, [0.8, 0.2])
+val_ds.val = True
+
+
+# %%
+from lightning.pytorch import Trainer
+BATCH_SIZE = 2
+
+train_dataloader = DataLoader(
+    train_ds,
+    batch_size=BATCH_SIZE,
+    shuffle=True,
+    drop_last=True,
+    pin_memory=True,
+    num_workers=0,
+)
+
+val_dataloader = DataLoader(
+    val_ds,
+    batch_size=BATCH_SIZE,
+    shuffle=False,
+    drop_last=True,
+    pin_memory=True,
+    num_workers=0,
+)
+
+model = DeepCascadeDANN(
+    # depth_str='ikikii',
+    depth_str='iiiii',
+    img_size=SIZE,
+    lr=1e-3,
+    weight_decay=1e-5
+)
+
+trainer = Trainer(
+    max_epochs=200,
+    precision='16-mixed',
+    default_root_dir=MODEL_PATH / 'DeepCascade',
+    accelerator='cpu'
+)
+
+trainer.fit(model, train_dataloader, val_dataloader)
 # %%
