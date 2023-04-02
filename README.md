@@ -14,6 +14,10 @@ Contains the Python modules required for all components of the project. Below is
 
 Tools for performing contrast inversion on adult MRI data. Executing the module directly will process all of the adult original images and save them to disk. This requires the adult data to be on disk and follow the directory conventions established in `paths.py`.
 
+### `/final_project/model.py`
+
+All PyTorch code pertaining to DANN model architecture.
+
 ### `/final_project/data.py`
 
 Contains the PyTorch dataset class based on `torch.utils.data.TensorDataset` along with utility functions for processing images and loading data as NumPy arrays. This requires the adult original, negative, and newborn data to be on disk and follow the directory conventions established in `paths.py`.
@@ -28,7 +32,7 @@ Freeform exploration module taking advantage of VSCode Interactive Python functi
 
 ### `/final_project/model.py`
 
-All PyTorch code pertaining to model architecture.
+All PyTorch code pertaining to DeepCascade model architecture.
 
 ### `/final_project/paths.py`
 
