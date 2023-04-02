@@ -207,14 +207,15 @@ class DeepCascadeDANN(pl.LightningModule):
 
     def training_step(self, batch, batch_idx):
         src_x, target_x, mask, y = batch
+        device = src_x.device
 
         alpha = self._calculate_alpha(batch_idx)
         y_hat, src_domain = self.forward(src_x, mask, alpha)
         _, target_domain = self.forward(target_x, mask, alpha)
 
         loss = F.mse_loss(y_hat, y)
-        src_err = F.nll_loss(src_domain, torch.zeros(y.size(0)).long())
-        target_err = F.nll_loss(target_domain, torch.ones(y.size(0)).long())
+        src_err = F.nll_loss(src_domain, torch.zeros(y.size(0)).long().to(device))
+        target_err = F.nll_loss(target_domain, torch.ones(y.size(0)).long().to(device))
 
         self.log('train_loss', loss)
         self.log('train_src_err', src_err)
@@ -226,14 +227,15 @@ class DeepCascadeDANN(pl.LightningModule):
 
     def validation_step(self, batch, batch_idx):
         src_x, target_x, mask, y = batch
+        device = src_x.device
 
         alpha = self._calculate_alpha(batch_idx)
         y_hat, src_domain = self.forward(src_x, mask, alpha)
         _, target_domain = self.forward(target_x, mask, alpha)
 
         loss = F.mse_loss(y_hat, y)
-        src_err = F.nll_loss(src_domain, torch.zeros(y.size(0)).long())
-        target_err = F.nll_loss(target_domain, torch.ones(y.size(0)).long())
+        src_err = F.nll_loss(src_domain, torch.zeros(y.size(0)).long().to(device))
+        target_err = F.nll_loss(target_domain, torch.ones(y.size(0)).long().to(device))
 
         self.log('val_loss', loss)
         self.log('val_src_err', src_err)
