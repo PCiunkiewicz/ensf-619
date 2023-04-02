@@ -37,7 +37,7 @@ class CNNBLock(nn.Module):
     def forward(self, x):
         features = self.conv(x)
         conv = self.conv2(features)
-        return torch.add(x, conv), features.detach().clone()
+        return torch.add(x, conv), features
 
 
 class ReconstructionBlock(nn.Module):
@@ -247,7 +247,7 @@ class DeepCascadeDANN(pl.LightningModule):
         return optim.AdamW(self.parameters(), lr=self.hparams.lr, weight_decay=self.hparams.weight_decay)
 
     @classmethod
-    def load_model(cls, name, model_dir='DeepCascade'):
+    def load_model(cls, name, model_dir='DeepCascadeDANN'):
         lightning_logs = MODEL_PATH / model_dir / 'lightning_logs'
         assert os.path.isdir(lightning_logs), f'Lightning logs not found for model {model_dir}'
 
